@@ -1,0 +1,23 @@
+{
+  "version": "2026-10-22",
+  "coverage_start": "2026-01-01",
+  "coverage_end": "2026-12-31",
+  "exchanges": ["DCE", "SHFE"],
+  "holiday_ranges": [
+    ["2026-01-01", "2026-01-03"],
+    ["2026-02-15", "2026-02-23"],
+    ["2026-04-04", "2026-04-06"],
+    ["2026-05-01", "2026-05-05"],
+    ["2026-06-19", "2026-06-21"],
+    ["2026-09-25", "2026-09-27"],
+    ["2026-10-01", "2026-10-07"]
+  ],
+  "no_night_starts": ["2025-12-31", "2026-02-13", "2026-04-03", "2026-04-30", "2026-06-18", "2026-09-24", "2026-09-30"],
+  "sources": {
+    "SHFE": "https://www.shfe.com.cn/services/calenderandholidays/holiday/",
+    "SHFE_resumption": "https://www.shfe.com.cn/publicnotice/notice/202609/t20260921_833503.html",
+    "DCE_notice_reprint": "https://finance.eastmoney.com/a/202512173594230398.html",
+    "DCE_resumption_reprint": "https://www.ccbfutures.com/main/a/20260915/79188.shtml"
+  },
+  "notes": "DCE 大商所发〔2025〕437号与 SHFE〔2025〕157号，2026 年休市日期及停夜盘日期一致。调休周末不交易。公告变更及后续年份须核对后更新；不覆盖临时停市。"
+}

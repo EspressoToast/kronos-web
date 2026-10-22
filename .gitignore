@@ -1,0 +1,17 @@
+.venv/
+.python/
+.cache/
+__pycache__/
+*.py[cod]
+.DS_Store
+.env
+.env.*
+!.env.example
+logs/
+webui/prediction_results/
+data/*
+!data/.gitkeep
+*.safetensors
+*.bin
+*.pt
+*.pth

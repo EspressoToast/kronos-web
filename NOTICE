@@ -1,0 +1,12 @@
+Kronos Web is an independent, unofficial web application derived from:
+https://github.com/shiyu-coder/Kronos
+Upstream revision: 67b630e67f6a18c9e9be918d9b4337c960db1e9a
+Copyright (c) 2025 ShiYu. MIT License; see LICENSE.
+
+The model implementation and initial Web UI derive from the upstream project.
+This distribution adds Chinese UI, future forecasting, gapless charts, local
+file refresh, PNG export, exchange holiday filtering, and packaging.
+
+Model weights are downloaded separately from NeoQuasar on Hugging Face;
+consult the applicable model repository for its terms. Third-party market
+data is downloaded at runtime and is not included in this source release.
