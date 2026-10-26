@@ -438,36 +438,98 @@
             }
         }
 
-        /* Application theme */
-        body { background: #f3f6fa; color: #17263c; }
-        .container { max-width: 1640px; padding: 28px; }
-        .header { text-align:left; color:#17263c; padding:12px 0 24px; margin-bottom:12px; border-bottom:1px solid #dce4ef; }
-        .header h1 {font-size:1.9rem; text-shadow:none; letter-spacing:-.5px;}
-        .header p {color:#64748b; font-size:.95rem;}
-        .main-content {grid-template-columns:360px minmax(0,1fr);gap:24px;align-items:start;}
-        .control-panel,.chart-container {border:1px solid #e0e7ef;border-radius:16px;box-shadow:0 4px 24px #17263c06;}
-        .btn {background:#2563eb;border-radius:9px;font-size:14px;}
-        .btn-secondary {background:#edf2f8;color:#334155;border:1px solid #dce4ef;}
-        .btn-success {background:#2563eb;}
-        .chart-container {min-width:0; position:sticky;top:20px;}
-        .model-info {background:#f0f6ff;border:1px solid #cfe0fa;}
-        .model-info p,.model-info h3 {color:#334155;}
-        #chart:empty::before {content:'加载模型与历史数据，开始生成未来 K 线';display:block;padding:140px 24px;text-align:center;color:#94a3b8;}
-        #forecast-summary {font-size:13px;line-height:1.8;overflow-wrap:anywhere;}
-        .form-text {display:block;line-height:1.6;}
-        @media(max-width:1000px){.main-content{grid-template-columns:1fr}.chart-container{position:static}.container{padding:16px}}
+        /* Dark trading workspace */
+        :root {color-scheme:dark;--bg:#090d14;--panel:#101722;--line:#253044;--muted:#94a3b8;--accent:#7ca8ff;}
+        body {background:var(--bg);color:#e5edf9;font-size:14px;}
+        .container {max-width:1600px;padding:0 32px 40px;}
+        .header {display:flex;align-items:center;justify-content:space-between;text-align:left;padding:24px 0;margin:0 0 28px;border-bottom:1px solid var(--line);color:#e5edf9;gap:20px;}
+        .header h1 {font-size:21px;letter-spacing:1px;margin:0;text-shadow:none;}
+        .header h1 span {font-weight:400;font-size:13px;letter-spacing:0;color:var(--muted);margin-left:14px;}
+        .header p {font-size:12px;color:#a9bacf;opacity:1;}
+        .live-dot {display:inline-block;width:6px;height:6px;border-radius:50%;background:#52d6aa;margin-right:8px;box-shadow:0 0 12px #52d6aa55;}
+        .workspace-intro {margin:0 0 22px;display:flex;justify-content:space-between;align-items:end;gap:12px;}
+        .workspace-intro h2 {font-size:26px;font-weight:600;letter-spacing:-.6px;margin-bottom:7px;}
+        .workspace-intro p {color:var(--muted);font-size:13px;line-height:1.7;}
+        .eyebrow {color:var(--accent);font-size:11px;letter-spacing:2px;margin-bottom:9px;}
+        .main-content {display:flex;flex-direction:column;gap:24px;margin:0;}
+        .control-panel,.chart-container {width:100%;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:none;padding:24px;}
+        .control-panel {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 24px;}
+        .control-panel > h2 {grid-column:1/-1;}
+        .control-panel h2,.chart-container h2 {font-size:15px;font-weight:600;color:#e5edf9;border:none;padding:0;margin:0;}
+        .control-panel > hr {display:none;}
+        .form-group {margin:0;min-width:0;}
+        .form-group label {color:#bdcbe0;font-size:12px;font-weight:500;margin-bottom:8px;}
+        .form-group select,select {width:100%;background:#0b111c;color:#e5edf9;border:1px solid #303d53!important;border-radius:7px;padding:11px 12px!important;font-size:13px;min-height:42px;}
+        select:focus-visible,.btn:focus-visible,summary:focus-visible {outline:2px solid var(--accent);outline-offset:3px;}
+        .form-text {display:block;line-height:1.7;color:var(--muted);font-size:12px;margin-top:5px;}
+        .control-panel > .form-group > small {display:none;}
+        #market-panel {grid-column:1/-1;display:grid;grid-template-columns:2fr 1fr auto auto;gap:12px 20px;align-items:end;border-top:1px solid var(--line);padding-top:18px;}
+        #market-panel[hidden],#local-data-panel[hidden] {display:none;}
+        #market-panel > label {font-size:12px;color:#bdcbe0;margin:0 0 12px!important;white-space:nowrap;}
+        #market-status {grid-column:1/-1;margin:0;}
+        #market-panel > p:last-child {grid-column:1/-1;margin:-6px 0 0;font-size:11px;color:#8292aa;}
+        #local-data-panel {grid-column:1/-1;display:grid;grid-template-columns:2fr auto auto;gap:14px;align-items:end;}
+        #file-refresh-status {grid-column:1/-1;grid-row:2;}
+        .btn {background:#6698f5;color:#071325;border:1px solid transparent;border-radius:7px;padding:11px 18px;font-size:13px;font-weight:600;width:auto;margin:0;min-height:42px;transition:background .15s;}
+        .btn:hover {background:#8ab1fc;transform:none;box-shadow:none;}
+        .btn-secondary {background:#182233;border-color:#33435b;color:#c4d3e9;}
+        .btn-secondary:hover {background:#23334b;}
+        .btn:disabled {opacity:.45;}
+        #predict-btn {min-width:184px;justify-self:end;grid-column:3;}
+        #predict-progress {grid-column:1/-1;margin:0;color:#a8c7ff;}
+        #predict-progress:empty {display:none;}
+        .advanced-options {grid-column:1/3;border:0;background:transparent;padding:0;margin:0;align-self:center;}
+        .advanced-options summary {color:#b1c5e5;font-size:13px;cursor:pointer;padding:10px 0;}
+        .advanced-options[open] {grid-column:1/-1;border-top:1px solid var(--line);padding-top:10px;}
+        .advanced-options[open] ~ #predict-btn {grid-column:3;}
+        .advanced-options > .form-group {display:inline-block;vertical-align:top;width:calc(20% - 18px);margin:16px 16px 16px 0;}
+        input[type=range] {accent-color:#7ca8ff;padding:0!important;border:0!important;height:24px;vertical-align:middle;}
+        input[type=checkbox] {accent-color:#7ca8ff;}
+        .form-group span {color:#a9c6fc;font-size:13px;min-width:28px;}
+        .model-info {background:#121e30;border:1px solid #2a3c56;border-radius:8px;margin:0;padding:14px;}
+        .model-info h3,.model-info p,.model-info strong {color:#aebfd6;font-size:12px;line-height:1.7;}
+        .calendar-options {margin-top:8px;}
+        .calendar-options select {max-width:380px;display:block;}
+        #model-status {grid-column:1/-1;margin:0;}
+        .status {font-size:12px;padding:12px;}
+        .status.success {background:#102b27;border-color:#245248;color:#81dcc1;}
+        .status.error {background:#321d29;border-color:#603345;color:#ffa5b9;}
+        .status.info {background:#14263f;border-color:#2e4a70;color:#a6c8fa;}
+        .status.warning {background:#322a19;border-color:#5b4b29;color:#f1cf8d;}
+        #data-info {grid-column:1/-1;background:#0d1420;border:1px solid var(--line);margin:0;padding:12px 16px;}
+        #data-info h3 {font-size:12px;color:#b7c8df;margin:0 0 6px;}
+        #data-info p {display:inline-block;font-size:11px;color:#97aac5;margin:3px 20px 3px 0;}
+        #data-info strong {color:#c1cde0;}
+        .chart-container {position:static;min-width:0;padding:24px;}
+        .chart-heading {display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;}
+        .chart-heading p {color:var(--muted);font-size:12px;margin-top:6px;}
+        #chart {height:600px;}
+        #chart:empty {height:420px;background:repeating-linear-gradient(0deg,transparent,transparent 69px,#1c283955 70px),repeating-linear-gradient(90deg,transparent,transparent 119px,#1c283955 120px);border:1px dashed #2a3850;border-radius:8px;}
+        #chart:empty::before {content:'等待生成预测';display:block;padding:150px 24px 14px;text-align:center;color:#c5d4ec;font-size:18px;}
+        #chart:empty::after {content:'在上方选择品种与周期，点击「开始预测」';display:block;text-align:center;color:#8092ad;font-size:13px;}
+        #forecast-summary {font-size:12px;line-height:1.8;margin-bottom:12px;color:#abc0df;}
+        #save-chart-status {font-size:11px;}
+        .loading {grid-column:1/-1;padding:0;color:#a9bdd9;}
+        .loading.show {display:flex;align-items:center;gap:10px;}
+        .spinner {width:16px;height:16px;border-width:2px;border-color:#253651;border-top-color:#82abfa;margin:0;}
+        .comparison-section,.error-details,.error-stat {background:#111c2d;border-color:var(--line);color:#c9d6e8;}
+        .comparison-table th,.comparison-table td {background:#111c2d;color:#c9d6e8;border-color:var(--line);}
+        .site-footer {display:flex;justify-content:space-between;gap:16px;color:#73849d;font-size:11px;padding:24px 0 0;}
+        @media(max-width:1000px){ #market-panel{grid-template-columns:1fr 1fr}.advanced-options > .form-group{width:calc(33.33% - 20px)}.container{padding:0 20px 30px}}
+        @media(max-width:640px){.container{padding:0 12px 24px}.header{padding:20px 0;margin-bottom:20px}.header h1 span{display:none}.workspace-intro h2{font-size:23px}.control-panel{grid-template-columns:1fr;padding:18px;gap:16px}.control-panel > .form-group{grid-column:1/-1}#market-panel{grid-template-columns:1fr}#market-panel > *{grid-column:1/-1}#local-data-panel{grid-template-columns:1fr}.advanced-options,#predict-btn,.advanced-options[open] ~ #predict-btn{grid-column:1/-1;width:100%}.advanced-options > .form-group{width:100%;margin:12px 0}.chart-container{padding:16px}.chart-heading{align-items:start}.chart-heading .btn{padding:9px;font-size:11px}.site-footer{flex-direction:column;gap:6px}}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Kronos Web · K 线预测工作台</h1>
-            <p>本地运行 · 中文交互 · 开源模型驱动</p>
+            <h1>KRONOS<span>量化预测工作台</span></h1>
+            <p><span class="live-dot"></span>本地工作空间</p>
         </div>
 
+        <div class="workspace-intro"><div><div class="eyebrow">MARKET FORECAST</div><h2>洞察行情，探索未来。</h2><p>选择市场与周期，让历史 K 线成为预测的起点。</p></div></div>
         <div class="main-content">
             <div class="control-panel">
-                <h2>🎯 控制面板</h2>
+                <h2>预测设置</h2>
 
                 <!-- Model Selection -->
                 <div class="form-group">
@@ -494,13 +556,29 @@
                     模型状态信息
                 </div>
 
-                <!-- 加载模型 Button -->
-                <button id="load-model-btn" class="btn btn-secondary">
-                    🔄 加载模型
-                </button>
-
                 <hr style="margin: 20px 0; border: 1px solid #e2e8f0;">
 
+                <div class="form-group">
+                    <label for="data-source">数据来源：</label>
+                    <select id="data-source"><option value="futures">期货（主连行情）</option><option value="local">本地数据文件</option></select>
+                </div>
+                <div id="market-panel">
+                    <div class="form-group"><label for="futures-product">期货品种：</label>
+                        <select id="futures-product"><option value="">正在获取品种…</option></select>
+                    </div>
+                    <div class="form-group"><label for="bar-period">K 线周期：</label>
+                        <select id="bar-period">
+                            <option value="5">5 分钟</option><option value="15">15 分钟</option>
+                            <option value="30" selected>30 分钟</option><option value="60">60 分钟</option>
+                            <option value="daily">日线</option><option value="weekly">周线（日线聚合）</option><option value="monthly">月线（日线聚合）</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-secondary" id="refresh-products">更新品种列表</button>
+                    <label style="display:flex;gap:8px;align-items:center;margin:12px 0"><input type="checkbox" id="auto-market" style="width:auto">每 60 秒自动更新行情</label>
+                    <p id="market-status" class="form-text" role="status" aria-live="polite"></p>
+                    <p class="form-text">来自新浪公开行情，可能有延迟；最新一根可能尚未收盘。自动更新仅刷新数据，不会自动重新预测。</p>
+                </div>
+                <div id="local-data-panel" hidden>
                 <!-- Data File Selection -->
                 <div class="form-group">
                     <label for="data-file-select">选择数据文件：</label>
@@ -518,6 +596,8 @@
                     📁 加载数据
                 </button>
 
+                </div>
+
                 <!-- 数据信息 Display -->
                 <div id="data-info" class="data-info" style="display: none;">
                     <h3>📊 数据信息</h3>
@@ -531,31 +611,22 @@
 
                 <hr style="margin: 20px 0; border: 1px solid #e2e8f0;">
 
-                <div class="model-info">
-                    <h3>预测文件末尾之后的未来行情</h3>
-                    <p>自动使用最新的历史 K 线作为输入，预测结果接在历史末尾。</p>
-                    <p>可按交易所日历跳过周末、节假日和停开的夜盘；K 线时刻沿用文件的时间标记。</p>
-                    <label for="calendar-select">交易日历：</label>
-                    <select id="calendar-select" style="width:100%;padding:10px;margin-top:8px;">
-                        <option value="auto">自动识别（豆一 / 棕榈油 / 不锈钢）</option>
-                        <option value="DCE">大商所（2026 年）</option>
-                        <option value="SHFE">上期所（2026 年）</option>
-                        <option value="none">仅按历史时段推算（不滤节假日）</option>
-                    </select>
-                    <p class="form-text">已核对范围：2026 年。超出范围会提示减少预测条数，不会使用未经确认的日期。</p>
-                </div>
-
+                <details id="advanced-options" class="advanced-options">
+                    <summary>高级选项</summary>
+                    <p class="form-text">默认使用 400 条历史数据、预测 120 条，T = 1.0，top_p = 0.9。修改后按当前设置预测，收起不会重置。</p>
                 <!-- Prediction Parameters -->
                 <div class="form-group">
                     <label for="lookback">历史数据条数：</label>
-                    <input type="number" id="lookback" value="400" min="2" max="2048">
-                    <small class="form-text">使用文件末尾的历史数据；small/base 最多 512 条</small>
+                    <input type="range" id="lookback" value="400" min="2" max="512" step="1">
+                    <span id="lookback-value">400</span>
+                    <small class="form-text">使用文件末尾的历史数据</small>
                 </div>
 
                 <div class="form-group">
                     <label for="pred-len">预测条数：</label>
-                    <input type="number" id="pred-len" value="120" min="1" max="512">
-                    <small class="form-text">预测历史末尾之后的 K 线数量，可设为 1–512 条</small>
+                    <input type="range" id="pred-len" value="120" min="1" max="512" step="1">
+                    <span id="pred-len-value">120</span>
+                    <small class="form-text">预测历史末尾之后的 K 线数量</small>
                 </div>
 
                 <!-- Prediction Quality Parameters -->
@@ -575,13 +646,31 @@
 
                 <div class="form-group">
                     <label for="sample-count">采样次数：</label>
-                    <input type="number" id="sample-count" value="1" min="1" max="5" step="1">
+                    <input type="range" id="sample-count" value="1" min="1" max="5" step="1">
+                    <span id="sample-count-value">1</span>
                     <small class="form-text">生成多组预测并取平均值，建议 1–3 次；次数越多，耗时越长。</small>
                 </div>
 
-                <button id="predict-btn" class="btn btn-success" disabled>
+<div class="model-info calendar-options">
+                    <h3>预测文件末尾之后的未来行情</h3>
+                    <p>自动使用最新的历史 K 线作为输入，预测结果接在历史末尾。</p>
+                    <p>可按交易所日历跳过周末、节假日和停开的夜盘；K 线时刻沿用文件的时间标记。</p>
+                    <label for="calendar-select">交易日历：</label>
+                    <select id="calendar-select" style="width:100%;padding:10px;margin-top:8px;">
+                        <option value="auto">自动识别（在线行情 / 已知文件）</option>
+                        <option value="DCE">大商所（2026 年）</option>
+                        <option value="SHFE">上期所（2026 年）</option>
+                        <option value="none">仅按历史时段推算（不滤节假日）</option>
+                    </select>
+                    <p class="form-text">已核对范围：2026 年。超出范围会提示减少预测条数，不会使用未经确认的日期。</p>
+                </div>
+                </details>
+
+                <button id="predict-btn" type="button" class="btn btn-success">
                     🔮 开始预测
                 </button>
+
+                <p id="predict-progress" class="form-text" role="status" aria-live="polite"></p>
 
                 <!-- Loading Status -->
                 <div id="loading" class="loading">
@@ -591,10 +680,9 @@
             </div>
 
             <div class="chart-container">
-                <h2>📈 预测结果图表</h2>
+                <div class="chart-heading"><div><h2>行情与预测</h2><p>历史 K 线 / 未来走势 / 成交量</p></div><button id="save-chart-btn" class="btn btn-secondary" type="button" disabled>导出图片 ↗</button></div>
                 <div id="forecast-summary" class="model-info" style="display:none;"></div>
                 <div id="chart"></div>
-                <button id="save-chart-btn" class="btn btn-secondary" type="button" disabled>💾 保存当前预测图片（PNG）</button>
                 <p id="save-chart-status" class="form-text" role="status" aria-live="polite">预测完成后可保存图片，包含当前图表视图及本次预测信息。</p>
 
                 <!-- Comparison Analysis -->
@@ -650,6 +738,8 @@
         </div>
     </div>
 
+    <footer class="site-footer container"><span>KRONOS WEB · 开源行情预测工作台</span><span>模型预测仅供研究参考，不构成投资建议。</span></footer>
+
     <script>
         // Global variables
         let currentDataFile = null;
@@ -664,11 +754,106 @@
             initializeApp();
         });
 
+        let marketBusy = false;
+        let predictionBusy = false;
+        function setPredictionBusy(busy) {
+            predictionBusy = busy;
+            document.querySelectorAll('.control-panel select, .control-panel input, .control-panel button').forEach(control => control.disabled = busy);
+            showLoading(busy);
+            document.getElementById('predict-btn').textContent = busy ? '正在预测…' : '🔮 开始预测';
+        }
+        function predictionProgress(message) {
+            document.getElementById('predict-progress').textContent = message;
+        }
+        function invalidateMarketData() {
+            currentDataFile = null;
+            currentDataInfo = null;
+            document.getElementById('predict-btn').disabled = predictionBusy || marketBusy;
+            document.getElementById('data-info').style.display = 'none';
+        }
+        async function loadProducts(refresh = false) {
+            const select = document.getElementById('futures-product');
+            const status = document.getElementById('market-status');
+            const button = document.getElementById('refresh-products');
+            button.disabled = true;
+            try {
+                const {data} = await axios.get('/api/market/catalog', {params:{refresh:refresh ? '1' : '0'}});
+                const previous = select.value;
+                select.replaceChildren(new Option('请选择期货品种', ''));
+                const groups = new Map();
+                data.items.forEach(item => {
+                    if (!groups.has(item.exchange)) {
+                        const group = document.createElement('optgroup');group.label=item.exchange_name;
+                        groups.set(item.exchange, group);select.appendChild(group);
+                    }
+                    const option = new Option(item.name + '主连', item.id);
+                    groups.get(item.exchange).appendChild(option);
+                });
+                select.value = previous;
+                status.textContent = `${data.items.length} 个品种 · 目录更新于 ${data.updated_at}。${data.warning || ''}`;
+            } catch (error) {
+                status.textContent = error.response?.data?.error || '品种加载失败，请点击更新品种列表重试。';
+            } finally { button.disabled = false; }
+        }
+        async function fetchMarket() {
+            if (marketBusy || document.getElementById('data-source').value !== 'futures') return;
+            const product = document.getElementById('futures-product');
+            const period = document.getElementById('bar-period');
+            if (!product.value) return;
+            const status = document.getElementById('market-status');
+            const controls = ['futures-product','bar-period','data-source','refresh-products'];
+            marketBusy = true;
+            controls.forEach(id => document.getElementById(id).disabled = true);
+            document.getElementById('predict-btn').disabled = true;
+            status.textContent = '正在获取最新行情…';
+            try {
+                const {data} = await axios.post('/api/market/download', {node:product.value,period:period.value});
+                await loadDataFiles();
+                document.getElementById('data-file-select').value = data.file_path;
+                document.getElementById('calendar-select').value = data.calendar;
+                await loadData();
+                if (currentDataFile !== data.file_path) throw new Error('行情已下载，但加载失败，请重试');
+                const lookback = document.getElementById('lookback');
+                if (Number(lookback.value) > data.rows) {
+                    lookback.value = Math.max(2, data.rows);
+                    document.getElementById('lookback-value').textContent = lookback.value;
+                }
+                status.textContent = `${data.name} · ${data.rows} 根 · 行情截至 ${data.last_bar.replace('T',' ')} · 获取于 ${data.fetched_at.replace('T',' ')}。` +
+                    (data.calendar === 'none' ? '该交易所暂未核对节假日日历，按历史时段推算。' : '') +
+                    (['weekly','monthly'].includes(data.period) ? '当前周/月可能尚未结束，未来日期采用周期结束日标签。' : '');
+            } catch (error) {
+                invalidateMarketData();
+                status.textContent = (error.response?.data?.error || error.message) + '；本次未更新成功，请重试。';
+                throw error;
+            } finally {
+                marketBusy = false;
+                controls.forEach(id => document.getElementById(id).disabled = predictionBusy);
+                document.getElementById('predict-btn').disabled = predictionBusy || marketBusy;
+            }
+        }
+        function setupMarketControls() {
+            document.getElementById('refresh-products').addEventListener('click', () => loadProducts(true));
+            ['futures-product','bar-period'].forEach(id => document.getElementById(id).addEventListener('change', () => {
+                invalidateMarketData();
+            }));
+            document.getElementById('data-source').addEventListener('change', function() {
+                const futures = this.value === 'futures';
+                document.getElementById('market-panel').hidden = !futures;
+                document.getElementById('local-data-panel').hidden = futures;
+                invalidateMarketData();
+            });
+            setInterval(() => {
+                if (!document.hidden && document.getElementById('auto-market').checked &&
+                    !predictionBusy && !marketBusy && !document.getElementById('loading').classList.contains('show')) fetchMarket().catch(() => {});
+            }, 60000);
+        }
+
+
         // Initialize application
         async function initializeApp() {
             console.log('🚀 Initializing Kronos Web UI...');
 
-            // Load available models
+        // Load available models
             await loadAvailableModels();
 
             // Load data file list
@@ -676,6 +861,8 @@
 
             // Set up event listeners
             setupEventListeners();
+            setupMarketControls();
+            await loadProducts();
 
             // Initialize time slider
 
@@ -712,44 +899,20 @@
                 option.textContent = `${model.name} (${model.params}) - ${model.description}`;
                 modelSelect.appendChild(option);
             });
+            if (availableModels['kronos-small']) modelSelect.value = 'kronos-small';
         }
 
         // Load model
         async function loadModel() {
-            const modelKey = document.getElementById('model-select').value;
-            const device = document.getElementById('device-select').value;
-
-            if (!modelKey) {
-                showStatus('error', '请选择要加载的模型');
-                return;
-            }
-
-            try {
-                showLoading(true);
-                document.getElementById('load-model-btn').disabled = true;
-
-                const response = await axios.post('/api/load-model', {
-                    model_key: modelKey,
-                    device: device
-                });
-
-                if (response.data.success) {
-                    modelLoaded = true;
-                    loadedModelName = response.data.model_info.name;
-                    showStatus('success', response.data.message);
-                    updateModelStatus();
-                    document.getElementById('predict-btn').disabled = false;
-                    console.log('✅ Model loaded successfully:', response.data.model_info);
-                } else {
-                    showStatus('error', response.data.error);
-                }
-            } catch (error) {
-                console.error('❌ 模型加载失败：', error);
-                showStatus('error', `模型加载失败： ${error.response?.data?.error || error.message}`);
-            } finally {
-                showLoading(false);
-                document.getElementById('load-model-btn').disabled = false;
-            }
+            modelLoaded = false;
+            const response = await axios.post('/api/load-model', {
+                model_key: document.getElementById('model-select').value,
+                device: document.getElementById('device-select').value
+            });
+            if (!response.data.success) throw new Error(response.data.error || '模型加载失败');
+            modelLoaded = true;
+            loadedModelName = response.data.model_info.name;
+            showStatus('success', response.data.message);
         }
 
         // Update model status
@@ -806,7 +969,7 @@
                 showStatus('error', '加载数据文件列表失败');
                 if (notify) refreshStatus.textContent = '刷新失败，请重试；原文件列表已保留。';
             } finally {
-                refreshButton.disabled = false;
+                refreshButton.disabled = predictionBusy;
                 refreshButton.textContent = '🔄 刷新文件列表';
             }
         }
@@ -814,42 +977,14 @@
         // Load data file
         async function loadData() {
             const filePath = document.getElementById('data-file-select').value;
-
-            if (!filePath) {
-                showStatus('error', '请选择要加载的数据文件');
-                return;
-            }
-
-            try {
-                showLoading(true);
-                document.getElementById('load-data-btn').disabled = true;
-
-                const response = await axios.post('/api/load-data', {
-                    file_path: filePath
-                });
-
-                if (response.data.success) {
-                    currentDataFile = filePath;
-                    currentDataInfo = response.data.data_info;
-                    showDataInfo(response.data.data_info);
-                    showStatus('success', response.data.message);
-
-                    // Update prediction button status
-                    if (modelLoaded) {
-                        document.getElementById('predict-btn').disabled = false;
-                    }
-
-                    console.log('✅ Data loaded successfully:', response.data.data_info);
-                } else {
-                    showStatus('error', response.data.error);
-                }
-            } catch (error) {
-                console.error('❌ 数据加载失败：', error);
-                showStatus('error', `数据加载失败： ${error.response?.data?.error || error.message}`);
-            } finally {
-                showLoading(false);
-                document.getElementById('load-data-btn').disabled = false;
-            }
+            if (!filePath) throw new Error('请选择要加载的数据文件');
+            currentDataFile = null;
+            currentDataInfo = null;
+            const response = await axios.post('/api/load-data', {file_path: filePath});
+            if (!response.data.success) throw new Error(response.data.error || '数据加载失败');
+            currentDataFile = filePath;
+            currentDataInfo = response.data.data_info;
+            showDataInfo(currentDataInfo);
         }
 
         // Display data information
@@ -868,19 +1003,23 @@
 
         // Start prediction
         async function startPrediction() {
-            if (!currentDataFile) {
-                showStatus('error', '请先加载数据文件');
-                return;
-            }
-
-            if (!modelLoaded) {
-                showStatus('error', '请先加载模型');
-                return;
-            }
-
+            if (predictionBusy) return;
+            if (marketBusy) { predictionProgress('行情正在更新，请稍候再开始预测'); return; }
+            const futures = document.getElementById('data-source').value === 'futures';
+            if (!document.getElementById('model-select').value) { predictionProgress('请先选择模型'); return; }
+            if (futures && !document.getElementById('futures-product').value) { predictionProgress('请先选择期货品种'); return; }
+            if (!futures && !document.getElementById('data-file-select').value) { predictionProgress('请先选择数据文件'); return; }
+            let step = '加载模型';
+            setPredictionBusy(true);
             try {
-                showLoading(true);
-                document.getElementById('predict-btn').disabled = true;
+                predictionProgress('1/3 正在加载模型…');
+                await loadModel();
+                step = futures ? '获取并加载最新行情' : '加载本地数据';
+                predictionProgress(`2/3 正在${step}…`);
+                if (futures) await fetchMarket();
+                else await loadData();
+                step = '生成预测';
+                predictionProgress('3/3 正在生成未来 K 线，请稍候…');
 
                 const lookback = parseInt(document.getElementById('lookback').value);
                 const predLen = parseInt(document.getElementById('pred-len').value);
@@ -914,19 +1053,20 @@
                         generatedAt: new Date().toLocaleString('zh-CN')
                     });
                     showStatus('success', response.data.message);
+                    predictionProgress('预测完成，未来 K 线已显示在右侧图表。');
                 } else {
-                    showStatus('error', response.data.error);
+                    throw new Error(response.data.error || '预测失败');
                 }
             } catch (error) {
                 console.error('❌ 预测失败：', error);
-                showStatus('error', `预测失败： ${error.response?.data?.error || error.message}`);
+                const message = `${step}失败：${error.response?.data?.error || error.message}。请重试。`;
+                showStatus('error', message);
+                predictionProgress(message);
             } finally {
-                showLoading(false);
-                document.getElementById('predict-btn').disabled = false;
+                setPredictionBusy(false);
             }
         }
 
-        // Display prediction results
         async function displayPredictionResult(result, params) {
             document.getElementById('save-chart-btn').disabled = true;
             const summary = document.getElementById('forecast-summary');
@@ -1100,10 +1240,14 @@
         // Set up event listeners
         function setupEventListeners() {
             // Load model button
-            document.getElementById('load-model-btn').addEventListener('click', loadModel);
 
             // Load data button
-            document.getElementById('load-data-btn').addEventListener('click', loadData);
+            document.getElementById('load-data-btn').addEventListener('click', async () => {
+                setPredictionBusy(true);
+                try { await loadData(); predictionProgress('数据已加载，点击开始预测即可。'); }
+                catch (error) { predictionProgress(error.response?.data?.error || error.message); }
+                finally { setPredictionBusy(false); }
+            });
             document.getElementById('refresh-data-btn').addEventListener('click', () => loadDataFiles(true));
             document.getElementById('save-chart-btn').addEventListener('click', savePredictionImage);
 
@@ -1119,7 +1263,13 @@
                 document.getElementById('top-p-value').textContent = this.value;
             });
 
-            // Update slider when lookback window size changes
+            ['lookback', 'pred-len', 'sample-count'].forEach(id => {
+                const slider = document.getElementById(id);
+                const value = document.getElementById(id + '-value');
+                const updateValue = () => { value.textContent = slider.value; };
+                slider.addEventListener('input', updateValue);
+                updateValue();
+            });
 
 
         }

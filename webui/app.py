@@ -249,6 +249,7 @@ def create_prediction_chart(history, pred_df):
     """Use equal-width categories and the exact timestamps passed to the model."""
     fig = go.Figure()
     labels = []
+    has_volume = 'volume' in history.columns
     for frame, times, name, up, down in [
         (history, history['timestamps'], f'历史 K 线（{len(history)} 根）', '#26A69A', '#EF5350'),
         (pred_df, pred_df.index, f'未来预测（{len(pred_df)} 根）', '#3B82F6', '#A855F7')
@@ -258,16 +259,51 @@ def create_prediction_chart(history, pred_df):
         fig.add_trace(go.Candlestick(x=x, open=frame['open'], high=frame['high'],
             low=frame['low'], close=frame['close'], name=name,
             increasing_line_color=up, decreasing_line_color=down))
+        if has_volume and 'volume' in frame.columns:
+            volume = pd.to_numeric(frame['volume'], errors='coerce')
+            # Invalid values are gaps, not fabricated zero-volume bars.
+            volume = [float(v) if pd.notna(v) and np.isfinite(v) and v >= 0 else None for v in volume]
+            colors = [up if close >= opening else down
+                      for opening, close in zip(frame['open'], frame['close'])]
+            volume_name = '历史成交量' if frame is history else '预测成交量'
+            fig.add_trace(go.Bar(x=x, y=volume, yaxis='y2', name=volume_name,
+                marker_color=colors, opacity=0.75,
+                hovertemplate='%{x}<br>' + volume_name + '：%{y:,.2f}<extra></extra>'))
     tick_step = max(1, len(labels) // 8)
-    fig.update_layout(title='最新历史 K 线与未来预测', template='plotly_white',
+    fig.update_layout(title='最新历史 K 线与未来预测', template='plotly_dark', paper_bgcolor='#101722', plot_bgcolor='#101722',
+        font=dict(color='#aebfd6'),
         height=600, yaxis_title='价格', xaxis_title='K 线连续排列（休市空档已折叠）',
         legend=dict(orientation='h'), margin=dict(t=90, b=100))
     fig.update_xaxes(type='category', categoryorder='array', categoryarray=labels,
         rangeslider_visible=False, tickmode='array', tickvals=labels[::tick_step],
         ticktext=[v[:16] for v in labels[::tick_step]], tickangle=-25)
+    if has_volume:
+        fig.update_layout(
+            yaxis=dict(domain=[0.30, 1], title='价格'),
+            yaxis2=dict(domain=[0, 0.22], title='成交量', rangemode='tozero', anchor='x'),
+            xaxis=dict(anchor='y2'), bargap=0.15)
     fig.add_shape(type='line', xref='x', yref='paper', x0=len(history)-0.5,
         x1=len(history)-0.5, y0=0, y1=1, line=dict(color='#667eea', dash='dash'))
     return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+from webui import market_data
+
+@app.route('/api/market/catalog')
+def market_catalog():
+    try:
+        return jsonify(market_data.catalog(request.args.get('refresh') == '1'))
+    except Exception as e:
+        return jsonify(error=f'品种目录获取失败：{e}'), 502
+
+@app.route('/api/market/download', methods=['POST'])
+def market_download():
+    try:
+        data=request.get_json() or {}
+        return jsonify(market_data.download(data.get('node'), data.get('period')))
+    except ValueError as e:
+        return jsonify(error=str(e)), 400
+    except Exception as e:
+        return jsonify(error=f'行情更新失败：{e}'), 502
 
 @app.route('/api/health')
 def health():
@@ -334,7 +370,7 @@ def load_data():
                 'max': float(df[['open', 'high', 'low', 'close']].max().max())
             },
             'prediction_columns': ['open', 'high', 'low', 'close'] + (['volume'] if 'volume' in df.columns else []),
-            'timeframe': detect_timeframe(df)
+            'timeframe': market_data.PERIODS.get(market_data.metadata(file_path).get('period'), detect_timeframe(df))
         }
 
         return jsonify({
@@ -358,7 +394,7 @@ def predict():
         sample_count = int(data.get('sample_count', 1))
         if not file_path:
             return jsonify(error='文件路径不能为空'), 400
-        if not (2 <= lookback <= 2048 and 1 <= pred_len <= 512
+        if not (2 <= lookback <= 512 and 1 <= pred_len <= 512
                 and 0.1 <= temperature <= 2 and 0 < top_p <= 1 and 1 <= sample_count <= 5):
             return jsonify(error='参数超出允许范围'), 400
         df, error = load_data_file(file_path)
@@ -372,8 +408,18 @@ def predict():
         if lookback > predictor.max_context:
             return jsonify(error=f'当前模型最多支持 {predictor.max_context} 条历史数据'), 400
         history = df.tail(lookback).reset_index(drop=True)
-        calendar = resolve_calendar(data.get('calendar', 'auto'), file_path)
-        future = future_timestamps(df['timestamps'], pred_len, calendar)
+        meta = market_data.metadata(file_path)
+        selection = data.get('calendar', 'auto')
+        if selection == 'auto' and meta.get('calendar'):
+            selection = meta['calendar']
+        calendar = resolve_calendar(selection, file_path)
+        period = meta.get('period')
+        if period in ('weekly', 'monthly'):
+            freq = 'W-FRI' if period == 'weekly' else 'M'
+            start = pd.Period(history.timestamps.iloc[-1], freq=freq) + 1
+            future = pd.Series(pd.period_range(start, periods=pred_len, freq=freq).end_time.normalize())
+        else:
+            future = future_timestamps(df['timestamps'], pred_len, calendar)
         cols = [c for c in ['open', 'high', 'low', 'close', 'volume', 'amount'] if c in history]
         pred_df = predictor.predict(df=history[cols], x_timestamp=history['timestamps'],
             y_timestamp=future, pred_len=pred_len, T=temperature, top_p=top_p,
@@ -382,7 +428,7 @@ def predict():
             raise ValueError('模型返回非有限数值，请重新预测')
         results = [dict(timestamp=pd.Timestamp(t).isoformat(),
                        **{c: float(v) for c, v in row.items()}) for t, row in pred_df.iterrows()]
-        note = calendar_note(calendar)
+        note = ('周/月线预测日期为下一周期结束日标签，不代表已核对的具体交易日；当前周期可能尚未收盘。' if period in ('weekly', 'monthly') else calendar_note(calendar))
         prediction_type = f'使用文件末尾 {lookback} 根 K 线，预测其后 {pred_len} 根未来 K 线'
         save_prediction_results(file_path, prediction_type, results, [], history[cols],
             dict(lookback=lookback, pred_len=pred_len, temperature=temperature, top_p=top_p,
