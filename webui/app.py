@@ -210,7 +210,7 @@ def save_prediction_results(file_path, prediction_type, prediction_results, actu
         print(f"Failed to save prediction results: {e}")
         return None
 
-from webui.trading_calendar import resolve_calendar, permitted, calendar_note
+from webui.trading_calendar import resolve_calendar, permitted, calendar_note, stock_period_timestamps
 
 
 def future_timestamps(history, count, calendar="none"):
@@ -238,7 +238,7 @@ def future_timestamps(history, count, calendar="none"):
         day = last.normalize() + pd.Timedelta(days=offset)
         for slot in (common_slots if calendar != 'none' else slots.get(day.weekday(), [])):
             stamp = day + pd.Timedelta(slot)
-            if stamp > last and (calendar == "none" or permitted(stamp, daily)):
+            if stamp > last and (calendar == "none" or permitted(stamp, daily, calendar)):
                 result.append(stamp)
                 if len(result) == count:
                     return pd.Series(result)
@@ -291,7 +291,7 @@ from webui import market_data
 @app.route('/api/market/catalog')
 def market_catalog():
     try:
-        return jsonify(market_data.catalog(request.args.get('refresh') == '1'))
+        return jsonify(market_data.instrument_catalog(request.args.get('refresh') == '1'))
     except Exception as e:
         return jsonify(error=f'品种目录获取失败：{e}'), 502
 
@@ -412,9 +412,13 @@ def predict():
         selection = data.get('calendar', 'auto')
         if selection == 'auto' and meta.get('calendar'):
             selection = meta['calendar']
+        if meta.get('kind') == 'stock':
+            selection = 'CN_A'  # Also upgrades stock files saved before the stock calendar existed.
         calendar = resolve_calendar(selection, file_path)
         period = meta.get('period')
-        if period in ('weekly', 'monthly'):
+        if period in ('weekly', 'monthly') and calendar == 'CN_A':
+            future = stock_period_timestamps(history.timestamps.iloc[-1], pred_len, period)
+        elif period in ('weekly', 'monthly'):
             freq = 'W-FRI' if period == 'weekly' else 'M'
             start = pd.Period(history.timestamps.iloc[-1], freq=freq) + 1
             future = pd.Series(pd.period_range(start, periods=pred_len, freq=freq).end_time.normalize())
@@ -429,6 +433,12 @@ def predict():
         results = [dict(timestamp=pd.Timestamp(t).isoformat(),
                        **{c: float(v) for c, v in row.items()}) for t, row in pred_df.iterrows()]
         note = ('周/月线预测日期为下一周期结束日标签，不代表已核对的具体交易日；当前周期可能尚未收盘。' if period in ('weekly', 'monthly') else calendar_note(calendar))
+        if calendar == 'CN_A':
+            note = calendar_note(calendar)
+            if meta.get('kind') == 'stock':
+                note += ' A 股采用不复权行情。'
+            if period in ('weekly', 'monthly'):
+                note += ' 周/月线从下一周期开始，日期取该周期最后一个交易日；整周休市跳过，当前周期可能尚未收盘。'
         prediction_type = f'使用文件末尾 {lookback} 根 K 线，预测其后 {pred_len} 根未来 K 线'
         save_prediction_results(file_path, prediction_type, results, [], history[cols],
             dict(lookback=lookback, pred_len=pred_len, temperature=temperature, top_p=top_p,
